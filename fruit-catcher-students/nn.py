@@ -1,5 +1,7 @@
 import numpy as np
 
+#NEURAL NETWORK
+
 class NeuralNetwork:
 
     def __init__(self, input_size, hidden_architecture, hidden_activation, output_activation):
@@ -12,8 +14,13 @@ class NeuralNetwork:
         self.output_activation = output_activation
 
     def compute_num_weights(self):
-        # Implement this. Remember to account for the biases.
-        pass
+        total = 0
+        input_size = self.input_size
+        for n in self.hidden_architecture:
+            total += (input_size + 1) * n  # pesos + biases
+            input_size = n
+        total += (input_size + 1) * 1  # camada de saída (1 neurónio)
+        return total
 
     def load_weights(self, weights):
         w = np.array(weights)
@@ -35,14 +42,18 @@ class NeuralNetwork:
 
 
     def forward(self, x):
-        # Implement this
-        pass
+        print("Input para a rede neural:", x)
+        x = np.array(x)
+        for W, b in zip(self.hidden_weights, self.hidden_biases): #zip une em pares ordenados
+            z = x @ W + b
+            x = self.hidden_activation(z)
+        z = x @ self.output_weights + self.output_bias
+        return self.output_activation(z)
         
 
 def create_network_architecture(input_size):
-
     # Replace with your configuration
 
     hidden_fn = lambda x: 1 / (1 + np.exp(-x))
     output_fn = lambda x: 1 if x > 0 else -1
-    return NeuralNetwork(input_size, (), hidden_fn, output_fn)
+    return NeuralNetwork(input_size, (6,), hidden_fn, output_fn)

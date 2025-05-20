@@ -82,7 +82,7 @@ def extract_state(basket, items, classifier=None):
             state[3 + i * 3] = 0 if prediction is None else prediction
     return state
 
-def human_player(_):
+def human_player(_): #Controlo do keyboard setas esquerda e direita
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         return -1
