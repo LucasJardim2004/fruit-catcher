@@ -1,6 +1,7 @@
 import random
 import argparse
 import csv
+
 from pathlib import Path
 
 from game import start_game, get_score
@@ -13,31 +14,12 @@ MAX_SCORE = 100
 
 
 def fitness(nn, individual, seed):
-    """
-    Evaluates the performance (fitness) of a given individual in the game.
-
-    Args:
-        nn: The neural network instance.
-        individual (list[float]): A list of weights to load into the network.
-        seed (int): A random seed for consistent evaluation.
-
-    Returns:
-        int: The score achieved by the neural network with these weights.
-    """
     nn.load_weights(individual)
     random.seed(seed)
     return get_score(player=lambda state: nn.forward(state))
 
 
 def train_ai_player(filename, population_size, generations):
-    """
-    Trains the AI player using a genetic algorithm and saves the best weights to file.
-
-    Args:
-        filename (str): The file where the best weights will be saved.
-        population_size (int): The number of individuals in the population.
-        generations (int): The number of generations to evolve.
-    """
     nn = create_network_architecture(STATE_SIZE)
     individual_size = nn.compute_num_weights()
 
@@ -50,15 +32,6 @@ def train_ai_player(filename, population_size, generations):
 
 
 def load_ai_player(filename):
-    """
-    Loads a trained AI player (neural network) from file.
-
-    Args:
-        filename (str): Path to the file containing the saved weights.
-
-    Returns:
-        Callable: A function that takes a game state and returns the network's output.
-    """
     file_path = Path(filename)
 
     if not file_path.exists():
@@ -67,6 +40,8 @@ def load_ai_player(filename):
     with open(filename, 'r') as f:
         weights = list(map(float, f.read().split(',')))
 
+        print("Pesos carregados:", weights)  # Verifica os pesos carregados
+
     nn = create_network_architecture(STATE_SIZE)
     nn.load_weights(weights)
 
@@ -74,15 +49,6 @@ def load_ai_player(filename):
 
 
 def load_train_dataset(filename):
-    """
-    Loads a CSV dataset for training the decision tree classifier.
-
-    Args:
-        filename (str): Path to the training CSV file.
-
-    Returns:
-        tuple: (feature names, feature matrix X, labels y)
-    """
     with open(filename, 'r') as f:
         reader = csv.reader(f, delimiter=';')
         headers = next(reader)
@@ -95,29 +61,20 @@ def load_train_dataset(filename):
 
 
 def train_fruit_classifier(filename):
-    """
-    Trains a decision tree to classify game objects as fruit or bombs.
-
-    Args:
-        filename (str): Path to the training dataset.
-
-    Returns:
-        Callable: A function that predicts whether an item is fruit or a bomb.
-    """
     f, X, y = load_train_dataset(filename)
     dt = train_decision_tree(X, y)
     return lambda item: dt.predict(item)
 
 
 def main():
-    """
-    Main function. Parses CLI arguments and runs either training or the game using the AI.
-    """
     parser = argparse.ArgumentParser(description='IA 2024/2025 - Project 2 - Fruit Catcher')
     parser.add_argument('-t', '--train', action='store_true', help='train neural AI player with genetic algorithm')
-    parser.add_argument('-p', '--population', default=100, help='the population size for the genetic algorithm', type=int)
-    parser.add_argument('-g', '--generations', default=100, help='the number of generations for the genetic algorithm', type=int)
-    parser.add_argument('-f', '--file', default='best_individual.txt', help='the file to store/load the AI player weights')
+    parser.add_argument('-p', '--population', default=100, help='the population size for the genetic algorithm',
+                        type=int)
+    parser.add_argument('-g', '--generations', default=100, help='the number of generations for the genetic algorithm',
+                        type=int)
+    parser.add_argument('-f', '--file', default='best_individual.txt',
+                        help='the file to store/load the AI player weights')
     parser.add_argument('-l', '--headless', action='store_true', help='run without graphics')
     args = parser.parse_args()
 
@@ -126,6 +83,7 @@ def main():
         exit()
 
     ai_player = load_ai_player(args.file)
+
     fruit_classifier = train_fruit_classifier('train.csv')
 
     if args.headless:
