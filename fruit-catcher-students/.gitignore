@@ -1,0 +1,32 @@
+# Ficheiros Python compilados
+__pycache__/
+*.py[cod]
+*.so
+
+# Ficheiros de logs
+*.log
+
+# Ambiente virtual
+venv/
+.env/
+.envrc
+
+# Ficheiros de IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# macOS
+.DS_Store
+
+# Ficheiros de teste temporários
+*.tmp
+*.bak
+*.swp
+
+# Dados sensíveis ou gerados
+*.db
+*.sqlite3
+train.csv
+best_individual.txt

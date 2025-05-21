@@ -1,17 +1,14 @@
+# nn.py
 import numpy as np
-
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
-
 
 def sigmoid_derivative(x):
     s = sigmoid(x)
     return s * (1 - s)
 
-
 class NeuralNetwork:
-
     def __init__(self, input_size, hidden_architecture, hidden_activation=sigmoid, output_activation=sigmoid):
         self.input_size = input_size
         self.hidden_architecture = hidden_architecture
@@ -19,62 +16,45 @@ class NeuralNetwork:
         self.output_activation = output_activation
 
     def compute_num_weights(self):
-        # Calcula o número total de pesos e vieses na rede
-        num_weights = 0
-        input_size = self.input_size
-
-        for n in self.hidden_architecture:
-            num_weights += (input_size + 1) * n  # +1 para os vieses
-            input_size = n
-
-        # Adiciona os pesos e vieses da camada de saída
-        num_weights += input_size + 1
-        return num_weights
+        num = 0
+        in_size = self.input_size
+        for h in self.hidden_architecture:
+            num += (in_size + 1) * h
+            in_size = h
+        num += in_size + 1
+        return num
 
     def load_weights(self, weights):
         w = np.array(weights)
-
         self.hidden_weights = []
-        self.hidden_biases = []
-
-        start_w = 0
-        input_size = self.input_size
-        # Carrega pesos e vieses de cada camada oculta
-        for n in self.hidden_architecture:
-            end_w = start_w + (input_size + 1) * n
-            # Primeiro n valores são bias, os restantes são pesos
-            self.hidden_biases.append(w[start_w:start_w + n])
-            self.hidden_weights.append(
-                w[start_w + n:end_w].reshape(input_size, n)
-            )
-            start_w = end_w
-            input_size = n
-
-        # Camada de saída: primeiro weights, depois bias
-        self.output_weights = w[start_w:start_w + input_size]
-        self.output_bias = w[start_w + input_size]
+        self.hidden_biases  = []
+        start = 0
+        in_size = self.input_size
+        for h in self.hidden_architecture:
+            end = start + (in_size + 1) * h
+            self.hidden_biases.append(w[start:start + h])
+            self.hidden_weights.append(w[start + h:end].reshape(in_size, h))
+            start = end
+            in_size = h
+        self.output_weights = w[start:start + in_size]
+        self.output_bias    = w[start + in_size]
 
     def forward(self, x):
-        # Propagação direta
         a = np.array(x)
-        # Camadas ocultas
-        for weights, biases in zip(self.hidden_weights, self.hidden_biases):
-            z = np.dot(a, weights) + biases
+        for W, b in zip(self.hidden_weights, self.hidden_biases):
+            z = a.dot(W) + b
             a = self.hidden_activation(z)
-
-        # Camada de saída
-        z = np.dot(a, self.output_weights) + self.output_bias
-        output = self.output_activation(z)
-        return output
-
+        z_out = a.dot(self.output_weights) + self.output_bias
+        return self.output_activation(z_out)
 
 def create_network_architecture(input_size):
     """
-    Cria a arquitetura da rede neural com base no tamanho da entrada.
+    Cria uma rede neural com:
+      - 1 camada oculta de 10 neurónios (para aprender não-linearidades)
+      - sigmóide nas camadas ocultas
+      - threshold em 0 na saída para decidir -1/1
     """
-    # Configuração padrão
+    hidden_architecture = (10,)
     hidden_fn = sigmoid
-    # Limiar no valor linear para equilibrar -1/+1
     output_fn = lambda x: 1 if x >= 0 else -1
-
-    return NeuralNetwork(input_size, (10,5), hidden_fn, output_fn)
+    return NeuralNetwork(input_size, hidden_architecture, hidden_fn, output_fn)
