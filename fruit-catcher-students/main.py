@@ -40,7 +40,7 @@ def load_ai_player(filename):
     with open(filename, 'r') as f:
         weights = list(map(float, f.read().split(',')))
 
-        print("Pesos carregados:", weights)  # Verifica os pesos carregados
+        #print("Pesos carregados:", weights)  # Verifica os pesos carregados
 
     nn = create_network_architecture(STATE_SIZE)
     nn.load_weights(weights)
