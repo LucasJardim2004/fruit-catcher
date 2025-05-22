@@ -13,14 +13,15 @@ def genetic_algorithm(individual_size,
                       max_score,
                       generations,
                       mutation_rate=0.05,   # aumentado para evitar estagnação
-                      elite_rate=0.20):     # mais elites para manter bons genes
+                      elite_rate=0.20,  # mais elites para manter bons genes
+                      seed=None):
     # Inicializa população
     population = generate_population(individual_size, population_size)
     global_best = (None, float('-inf'))
 
     for generation in range(generations):
         # Avalia fitness
-        scored = [(ind, fitness_function(ind)) for ind in population]
+        scored = [(ind, fitness_function(ind, seed)) if seed is not None else (ind, fitness_function(ind)) for ind in population]
         scored.sort(key=lambda x: x[1], reverse=True)
         best_ind, best_score = scored[0]
 
@@ -51,7 +52,8 @@ def genetic_algorithm(individual_size,
         for ind in new_pop[elite_size:]:
             if random.random() < mutation_rate:
                 idx = random.randint(0, individual_size - 1)
-                ind[idx] = random.uniform(-1, 1)
+                ind[idx] += random.gauss(0, 0.1)
+                ind[idx] = max(min(ind[idx], 1), -1)  # clamp opcional
 
         population = new_pop
 

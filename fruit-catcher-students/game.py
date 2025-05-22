@@ -155,7 +155,7 @@ def redraw(basket, items, score):
     pygame.display.update()
 
 
-def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
+def play(player=human_player, classifier=None, draw=True, fruit_limit=300):
     fruit_drop_rate = 30
     bomb_drop_rate = 100
     fruit_drop_count = 0
@@ -215,7 +215,7 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
 
         if draw:
             redraw(basket, items, score)
-            clock.tick(30)
+            clock.tick(60)
 
     return score
 

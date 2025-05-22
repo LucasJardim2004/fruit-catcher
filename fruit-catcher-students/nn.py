@@ -47,14 +47,16 @@ class NeuralNetwork:
         z_out = a.dot(self.output_weights) + self.output_bias
         return self.output_activation(z_out)
 
-def create_network_architecture(input_size):
+def create_network_architecture(input_size, mode="mlp"):
     """
-    Cria uma rede neural com:
-      - 1 camada oculta de 10 neurónios (para aprender não-linearidades)
-      - sigmóide nas camadas ocultas
-      - threshold em 0 na saída para decidir -1/1
+    Cria a arquitetura da rede:
+      - Se mode="perceptron": 1 neurónio sem camadas ocultas
+      - Se mode="mlp": 1 camada oculta com 10 neurónios
     """
-    hidden_architecture = (10,)
-    hidden_fn = sigmoid
-    output_fn = lambda x: 1 if x >= 0 else -1
-    return NeuralNetwork(input_size, hidden_architecture, hidden_fn, output_fn)
+    if mode == "perceptron":
+        return NeuralNetwork(input_size, (), sigmoid, lambda x: 1 if x >= 0 else -1)
+    else:
+        hidden_architecture = (10,)
+        hidden_fn = sigmoid
+        output_fn = lambda x: 1 if x >= 0 else -1
+        return NeuralNetwork(input_size, hidden_architecture, hidden_fn, output_fn)
