@@ -1,15 +1,17 @@
 import os
+
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 
 import pygame
 import random
 import csv
 import numpy as np
-
+import time
+from datetime import datetime
 
 pygame.init()
 
-#COLORS
+# COLORS
 black = (0, 0, 0)
 white = (255, 255, 255)
 dark_blue = (0, 0, 200)
@@ -19,13 +21,13 @@ bright_red = (255, 0, 0)
 bright_green = (0, 255, 0)
 bright_blue = (0, 0, 255)
 
-#DISPLAY
+# DISPLAY
 display_width = 500
 display_height = 800
 window = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('Fruit Catcher')
 
-#IMAGES
+# IMAGES
 bg = pygame.image.load('images/background.jpg')
 basket_img = pygame.image.load('images/basket.png')
 basket_img = pygame.transform.scale(basket_img, (150, 100))
@@ -40,10 +42,11 @@ with open('items.csv', 'r') as f:
         i['image'] = pygame.transform.scale(img, (100, 100))
         item_types[id] = i
 
-fruit_ids = [i for i, item in item_types.items() if item['is_fruit'] == 1] 
+fruit_ids = [i for i, item in item_types.items() if item['is_fruit'] == 1]
 bomb_ids = [i for i, item in item_types.items() if item['is_fruit'] == -1]
 
 clock = pygame.time.Clock()
+
 
 class Basket(object):
     def __init__(self, x, y):
@@ -52,9 +55,10 @@ class Basket(object):
         self.vel = 10
         self.w = 150
         self.h = 100
-    
+
     def draw(self, window):
         window.blit(basket_img, (self.x, self.y))
+
 
 class Item:
     def __init__(self, x, y, id):
@@ -67,6 +71,7 @@ class Item:
 
     def draw(self, window):
         window.blit(item_types[self.id]['image'], (self.x, self.y))
+
 
 def extract_state(basket, items, classifier=None):
     state = np.zeros(1 + 3 * 3)
@@ -82,7 +87,8 @@ def extract_state(basket, items, classifier=None):
             state[3 + i * 3] = 0 if prediction is None else prediction
     return state
 
-def human_player(_): #Controlo do keyboard setas esquerda e direita
+
+def human_player(_):  # Controlo do keyboard setas esquerda e direita
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         return -1
@@ -90,15 +96,19 @@ def human_player(_): #Controlo do keyboard setas esquerda e direita
         return 1
     else:
         return 0
-    
+
+
 def ai_player(_):
     return 0
 
-fruit_classifier = None  
+
+fruit_classifier = None
+
 
 def text_objects(text, font):
     textSurface = font.render(text, True, black)
     return textSurface, textSurface.get_rect()
+
 
 def message_to_screen(msg, x, y, size):
     regText = pygame.font.Font('freesansbold.ttf', size)
@@ -106,25 +116,27 @@ def message_to_screen(msg, x, y, size):
     textRect.center = (x, y)
     window.blit(textSurf, textRect)
 
-def button(msg, x, y, width, height, inactive_color, active_color, action = None):
+
+def button(msg, x, y, width, height, inactive_color, active_color, action=None):
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
-    if (x+width > mouse[0] > x and y+height > mouse[1] > y):
+    if (x + width > mouse[0] > x and y + height > mouse[1] > y):
         pygame.draw.rect(window, active_color, (x, y, width, height))
-        if (click[0] == 1 and action != None):
-            if (action == 'human'):
+        if click[0] == 1 and action is not None:
+            if action == 'human':
                 play(classifier=fruit_classifier)
-            elif (action == 'ai'):
+            elif action == 'ai':
                 play(player=ai_player, classifier=fruit_classifier)
-            pygame.quit()
-            quit()
+            elif action == 'quit':
+                pygame.quit()
+                quit()
+            # Removido o encerramento após jogar para voltar ao menu
     else:
         pygame.draw.rect(window, inactive_color, (x, y, width, height))
-    message_to_screen(msg, (x + (width/2)), (y + (height/2)), 20)
+    message_to_screen(msg, (x + (width / 2)), (y + (height / 2)), 20)
 
-        
+
 def start_game(ai=ai_player, classifier=None):
-
     global ai_player
     ai_player = ai
 
@@ -137,8 +149,8 @@ def start_game(ai=ai_player, classifier=None):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-        window.blit(bg, (0,0))
-        message_to_screen('FRUIT CATCHER', window.get_width()/2, window.get_height()/2, 50)
+        window.blit(bg, (0, 0))
+        message_to_screen('FRUIT CATCHER', window.get_width() / 2, window.get_height() / 2, 50)
         button('Human', 100, 450, 75, 50, dark_green, bright_green, 'human')
         button('AI', 200, 450, 75, 50, dark_blue, bright_blue, 'ai')
         button('Quit', 300, 450, 75, 50, dark_red, bright_red, 'quit')
@@ -147,15 +159,15 @@ def start_game(ai=ai_player, classifier=None):
 
 
 def redraw(basket, items, score):
-    window.blit(bg, (0,0))
+    window.blit(bg, (0, 0))
     for item in items:
         item.draw(window)
     basket.draw(window)
-    message_to_screen(f'Score: {score}', 50, 30, 20)    
+    message_to_screen(f'Score: {score}', 50, 30, 20)
     pygame.display.update()
 
 
-def play(player=human_player, classifier=None, draw=True, fruit_limit=300):
+def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
     fruit_drop_rate = 30
     bomb_drop_rate = 100
     fruit_drop_count = 0
@@ -165,6 +177,8 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=300):
     score = 0
     items = []
     basket = Basket(window.get_width() / 2 - 75, window.get_height() - 150)
+
+    start_time = time.time()  # ⏱️ início do jogo
 
     play = True
     while play:
@@ -179,7 +193,7 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=300):
         if selected_play == -1:
             basket.x = max(0, basket.x - basket.vel)
         elif selected_play == 1:
-            basket.x = min(window.get_width() - basket.w, basket.x + basket.vel)   
+            basket.x = min(window.get_width() - basket.w, basket.x + basket.vel)
 
         fruit_drop_timer += 1
         bomb_drop_timer += 1
@@ -199,7 +213,6 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=300):
             items.append(Item(bomb_x, 0, bomb_type))
             bomb_drop_timer = 0
 
-
         for item in items[:]:
             item.y += item.vel
             if item.y > window.get_height():
@@ -216,6 +229,13 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=300):
         if draw:
             redraw(basket, items, score)
             clock.tick(60)
+
+    duration = time.time() - start_time  # ⏱️ fim do jogo
+
+    # 💾 Guardar log apenas se IA jogou
+    if player != human_player:
+        with open("AIScore.txt", "a") as f:
+            f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Score: {score} | Duration: {duration:.2f}s\n")
 
     return score
 

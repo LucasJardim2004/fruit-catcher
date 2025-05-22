@@ -1,13 +1,29 @@
-# dt.py
 import math
 from collections import Counter
 
 class DecisionTree:
+    """
+    Implementação simples de uma árvore de decisão para classificação.
+
+    A árvore utiliza entropia para escolher os atributos e aplica uma profundidade
+    máxima para evitar overfitting. Funciona bem para datasets com atributos categóricos.
+
+    Attributes:
+        threshold (float): Ganho mínimo de informação para continuar a dividir nós.
+        max_depth (int): Profundidade máxima da árvore.
+        n_features (int): Número de atributos em cada instância.
+        tree (dict): Estrutura de árvore construída.
+    """
+
     def __init__(self, X, y, threshold=0.01, max_depth=3):
         """
-        Árvores de decisão baseadas em combinações de atributos como 'name' + 'color'.
-        'color' e 'format' isoladamente não distinguem bem bombas de frutas.
-        A profundidade 3 reduz overfitting no dataset pequeno atual.
+        Inicializa e treina a árvore de decisão com os dados fornecidos.
+
+        Args:
+            X (list[list[Any]]): Lista de exemplos de treino (atributos).
+            y (list[Any]): Lista de rótulos correspondentes a cada exemplo.
+            threshold (float, optional): Ganho mínimo de informação para dividir. Default é 0.01.
+            max_depth (int, optional): Profundidade máxima permitida. Default é 3.
         """
         self.threshold = threshold
         self.max_depth = max_depth
@@ -15,6 +31,15 @@ class DecisionTree:
         self.tree = self._build_tree(X, y, 0, list(range(self.n_features)))
 
     def _entropy(self, labels):
+        """
+        Calcula a entropia de uma lista de rótulos.
+
+        Args:
+            labels (list[Any]): Rótulos.
+
+        Returns:
+            float: Valor da entropia.
+        """
         total = len(labels)
         if total == 0:
             return 0.0
@@ -26,11 +51,32 @@ class DecisionTree:
         return ent
 
     def _majority(self, labels):
+        """
+        Devolve o rótulo mais comum na lista.
+
+        Args:
+            labels (list[Any]): Lista de rótulos.
+
+        Returns:
+            Any: Rótulo com maior frequência.
+        """
         if not labels:
             return None
         return Counter(labels).most_common(1)[0][0]
 
     def _build_tree(self, X, y, depth, features):
+        """
+        Constrói recursivamente a árvore de decisão.
+
+        Args:
+            X (list[list[Any]]): Dados de treino.
+            y (list[Any]): Rótulos de treino.
+            depth (int): Profundidade atual da árvore.
+            features (list[int]): Índices dos atributos disponíveis.
+
+        Returns:
+            dict: Representação da árvore (nó).
+        """
         if not y or all(lbl == y[0] for lbl in y):
             return {'label': y[0] if y else None}
         if not features or depth >= self.max_depth:
@@ -65,8 +111,21 @@ class DecisionTree:
         return node
 
     def predict(self, x):
+        """
+        Classifica uma nova instância utilizando a árvore treinada.
+
+        Args:
+            x (list[Any]): Exemplo a ser classificado.
+
+        Returns:
+            Any: Rótulo previsto.
+
+        Raises:
+            ValueError: Se o número de atributos for diferente do esperado.
+        """
         if len(x) != self.n_features:
             raise ValueError(f"Expected input with {self.n_features} features, got {len(x)}")
+
         def walk(node, xi):
             if 'label' in node:
                 return node['label']
@@ -75,7 +134,20 @@ class DecisionTree:
             if child is None:
                 return node['default']
             return walk(child, xi)
+
         return walk(self.tree, x)
 
 def train_decision_tree(X, y, threshold=0.01, max_depth=3):
+    """
+    Função auxiliar para treinar uma árvore de decisão.
+
+    Args:
+        X (list[list[Any]]): Dados de treino.
+        y (list[Any]): Rótulos de treino.
+        threshold (float, optional): Ganho mínimo de informação. Default é 0.01.
+        max_depth (int, optional): Profundidade máxima da árvore. Default é 3.
+
+    Returns:
+        DecisionTree: Instância da árvore treinada.
+    """
     return DecisionTree(X, y, threshold=threshold, max_depth=max_depth)
