@@ -5,6 +5,8 @@ import pygame
 import random
 import csv
 import numpy as np
+import time
+from datetime import datetime
 
 
 pygame.init()
@@ -106,18 +108,20 @@ def message_to_screen(msg, x, y, size):
     textRect.center = (x, y)
     window.blit(textSurf, textRect)
 
-def button(msg, x, y, width, height, inactive_color, active_color, action = None):
+def button(msg, x, y, width, height, inactive_color, active_color, action=None):
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
     if (x+width > mouse[0] > x and y+height > mouse[1] > y):
         pygame.draw.rect(window, active_color, (x, y, width, height))
-        if (click[0] == 1 and action != None):
-            if (action == 'human'):
+        if click[0] == 1 and action is not None:
+            if action == 'human':
                 play(classifier=fruit_classifier)
-            elif (action == 'ai'):
+            elif action == 'ai':
                 play(player=ai_player, classifier=fruit_classifier)
-            pygame.quit()
-            quit()
+            elif action == 'quit':
+                pygame.quit()
+                quit()
+            # Removido o encerramento após jogar para voltar ao menu
     else:
         pygame.draw.rect(window, inactive_color, (x, y, width, height))
     message_to_screen(msg, (x + (width/2)), (y + (height/2)), 20)
@@ -166,6 +170,8 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
     items = []
     basket = Basket(window.get_width() / 2 - 75, window.get_height() - 150)
 
+    start_time = time.time()  # ⏱️ início do jogo
+
     play = True
     while play:
         if draw:
@@ -179,7 +185,7 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
         if selected_play == -1:
             basket.x = max(0, basket.x - basket.vel)
         elif selected_play == 1:
-            basket.x = min(window.get_width() - basket.w, basket.x + basket.vel)   
+            basket.x = min(window.get_width() - basket.w, basket.x + basket.vel)
 
         fruit_drop_timer += 1
         bomb_drop_timer += 1
@@ -199,7 +205,6 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
             items.append(Item(bomb_x, 0, bomb_type))
             bomb_drop_timer = 0
 
-
         for item in items[:]:
             item.y += item.vel
             if item.y > window.get_height():
@@ -215,7 +220,14 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
 
         if draw:
             redraw(basket, items, score)
-            clock.tick(30)
+            clock.tick(60)
+
+    duration = time.time() - start_time  # ⏱️ fim do jogo
+
+    # 💾 Guardar log apenas se IA jogou
+    if player != human_player:
+        with open("logs.txt", "a") as f:
+            f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Score: {score} | Duration: {duration:.2f}s\n")
 
     return score
 
