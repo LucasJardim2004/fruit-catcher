@@ -178,7 +178,9 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
     items = []
     basket = Basket(window.get_width() / 2 - 75, window.get_height() - 150)
 
-    start_time = time.time()  # ⏱️ início do jogo
+    start_time = time.time()
+
+    explosion_frames = load_explosion_frames()
 
     play = True
     while play:
@@ -222,6 +224,8 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
                 if item.y + item.h > basket.y + basket.h / 3 and item.y + item.h < basket.y + basket.h / 2:
                     items.remove(item)
                     if item_types[item.id]['is_fruit'] == -1:
+                        if draw:
+                            show_explosion_animation(basket.x + basket.w // 2 - 100, basket.y - 100, explosion_frames)
                         play = False
                     else:
                         score += 1
@@ -230,14 +234,55 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
             redraw(basket, items, score)
             clock.tick(60)
 
-    duration = time.time() - start_time  # ⏱️ fim do jogo
+    duration = time.time() - start_time
 
-    # 💾 Guardar log apenas se IA jogou
     if player != human_player:
         with open("AIScore.txt", "a") as f:
             f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Score: {score} | Duration: {duration:.2f}s\n")
 
     return score
+
+def show_explosion():
+    explosion_gif = pygame.image.load("images/explosion.gif")
+    explosion_gif = pygame.transform.scale(explosion_gif, (150, 150))
+
+    try:
+        pygame.mixer.music.load("images/explosion.mp3")
+        pygame.mixer.music.play()
+    except Exception as e:
+        print(f"Erro ao reproduzir som: {e}")
+
+    duration = 2  # duração em segundos para mostrar a explosão
+    start_time = pygame.time.get_ticks()
+
+    while pygame.time.get_ticks() - start_time < duration * 1000:
+        window.blit(bg, (0, 0))  # opcional: repintar fundo
+        window.blit(explosion_gif, (window.get_width() // 2 - 75, window.get_height() // 2 - 75))
+        pygame.display.update()
+        clock.tick(60)
+
+def load_explosion_frames():
+    frames = []
+    frame_folder = 'images/explosion_frames'
+    for i in range(100):  # assume no máximo 100 frames
+        path = os.path.join(frame_folder, f'frame_{i}.png')
+        if os.path.exists(path):
+            img = pygame.image.load(path)
+            frames.append(pygame.transform.scale(img, (200, 200)))  # escala opcional
+        else:
+            break
+    return frames
+
+def show_explosion_animation(x, y, frames):
+    try:
+        pygame.mixer.Sound('images/explosion.mp3').play()
+    except Exception as e:
+        print(f'Erro ao reproduzir som: {e}')
+    for frame in frames:
+        window.blit(bg, (0, 0))
+        window.blit(frame, (x, y))
+        pygame.display.update()
+        pygame.time.delay(80)
 
 
 def get_score(player, classifier=None):
