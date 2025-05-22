@@ -215,7 +215,7 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
 
         if draw:
             redraw(basket, items, score)
-            clock.tick(60)
+            clock.tick(30)
 
     return score
 

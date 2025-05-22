@@ -3,10 +3,11 @@ import math
 from collections import Counter
 
 class DecisionTree:
-    def __init__(self, X, y, threshold=0.01, max_depth=6):
+    def __init__(self, X, y, threshold=0.01, max_depth=3):
         """
-        threshold baixo + max_depth intermédio permitem splits mais finos
-        para distinguir cores/formas de bombas vs frutas.
+        Árvores de decisão baseadas em combinações de atributos como 'name' + 'color'.
+        'color' e 'format' isoladamente não distinguem bem bombas de frutas.
+        A profundidade 3 reduz overfitting no dataset pequeno atual.
         """
         self.threshold = threshold
         self.max_depth = max_depth
@@ -60,10 +61,12 @@ class DecisionTree:
             splits[val]['X'].append(xi)
             splits[val]['y'].append(yi)
         for val, data in splits.items():
-            node['children'][val] = self._build_tree(data['X'], data['y'], depth+1, rem_feats)
+            node['children'][val] = self._build_tree(data['X'], data['y'], depth + 1, rem_feats)
         return node
 
     def predict(self, x):
+        if len(x) != self.n_features:
+            raise ValueError(f"Expected input with {self.n_features} features, got {len(x)}")
         def walk(node, xi):
             if 'label' in node:
                 return node['label']
@@ -74,5 +77,5 @@ class DecisionTree:
             return walk(child, xi)
         return walk(self.tree, x)
 
-def train_decision_tree(X, y, threshold=0.01, max_depth=6):
+def train_decision_tree(X, y, threshold=0.01, max_depth=3):
     return DecisionTree(X, y, threshold=threshold, max_depth=max_depth)
