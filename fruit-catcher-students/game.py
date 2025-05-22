@@ -182,6 +182,14 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
 
     explosion_frames = load_explosion_frames()
 
+    # Carregar imagens do boneco
+    moco_left = pygame.image.load("images/moco_e.png")
+    moco_right = pygame.image.load("images/moco_d.png")
+    moco_left = pygame.transform.scale(moco_left, (basket.w, basket.h))
+    moco_right = pygame.transform.scale(moco_right, (basket.w, basket.h))
+
+    basket_direction = 1  # Começa virado para a direita
+
     play = True
     while play:
         if draw:
@@ -194,8 +202,10 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
         selected_play = player(state)
         if selected_play == -1:
             basket.x = max(0, basket.x - basket.vel)
+            basket_direction = -1
         elif selected_play == 1:
             basket.x = min(window.get_width() - basket.w, basket.x + basket.vel)
+            basket_direction = 1
 
         fruit_drop_timer += 1
         bomb_drop_timer += 1
@@ -231,7 +241,7 @@ def play(player=human_player, classifier=None, draw=True, fruit_limit=100):
                         score += 1
 
         if draw:
-            redraw(basket, items, score)
+            redraw(basket, items, score, moco_left if basket_direction == -1 else moco_right)
             clock.tick(60)
 
     duration = time.time() - start_time
