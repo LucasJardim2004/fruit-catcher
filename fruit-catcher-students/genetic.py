@@ -76,10 +76,10 @@ def genetic_algorithm(individual_size,
 
         # Apply mutation to new individuals (excluding elites)
         for ind in new_pop[elite_size:]:
-            if random.random() < mutation_rate:
-                idx = random.randint(0, individual_size - 1)  # Select gene to mutate
-                ind[idx] += random.gauss(0, 0.1)  # Add small Gaussian noise
-                ind[idx] = max(min(ind[idx], 1), -1)  # Clamp values between -1 and 1
+            for i in range(len(ind)):
+                if random.random() < mutation_rate:
+                    ind[i] += random.gauss(0, 0.1)
+                    ind[i] = max(min(ind[i], 1), -1)
 
         # Set the new population for the next generation
         population = new_pop
