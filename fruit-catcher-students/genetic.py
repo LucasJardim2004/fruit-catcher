@@ -15,8 +15,8 @@ def genetic_algorithm(individual_size,
                       fitness_function,
                       max_score,
                       generations,
-                      mutation_rate=0.05,
-                      elite_rate=0.20,
+                      mutation_rate=0.1,
+                      elite_rate=0.3,
                       seed=None):
 
     # Initialize the population randomly
